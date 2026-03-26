@@ -173,9 +173,8 @@ export default function Home() {
                 borderRadius="12px"
                 fontSize="13px"
                 bg={toast.type === 'success' ? '#ecfdf3' : '#fef2f2'}
-                border={`1px solid ${
-                  toast.type === 'success' ? '#bbf7d0' : '#fecaca'
-                }`}
+                border={`1px solid ${toast.type === 'success' ? '#bbf7d0' : '#fecaca'
+                  }`}
                 color={toast.type === 'success' ? '#166534' : '#b91c1c'}
               >
                 {toast.message}
