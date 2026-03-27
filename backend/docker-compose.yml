@@ -1,6 +1,7 @@
 services:
   nginx:
     image: nginx:alpine
+    restart: unless-stopped
     ports:
       - "80:80"
     volumes:
@@ -9,24 +10,27 @@ services:
       - backend
 
   backend:
-    build: .          
+    build: .
     env_file: .env
-    command: gunicorn core.wsgi:application --bind 0.0.0.0:8000
+    restart: unless-stopped
+    command: sh -c "python manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:8000"
     depends_on:
       - db
       - redis
 
   celery_worker:
-    build: .          
+    build: .
     env_file: .env
+    restart: unless-stopped
     command: celery -A core worker --loglevel=info
     depends_on:
       - db
       - redis
 
   celery_beat:
-    build: .          
+    build: .
     env_file: .env
+    restart: unless-stopped
     command: celery -A core beat --loglevel=info
     depends_on:
       - db
@@ -35,6 +39,7 @@ services:
   db:
     image: postgres:15-alpine
     env_file: .env
+    restart: unless-stopped
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -44,6 +49,7 @@ services:
 
   redis:
     image: redis:alpine
+    restart: unless-stopped
 
 volumes:
   postgres_data:
