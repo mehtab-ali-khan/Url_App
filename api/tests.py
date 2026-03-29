@@ -1,7 +1,8 @@
 import pytest
-from api.models import Url, UrlCheck
 from django.urls import reverse
 from rest_framework.test import APIClient
+
+from api.models import Url, UrlPing
 
 
 @pytest.fixture
@@ -46,16 +47,16 @@ def test_url_create_rejects_invalid_url(api_client):
 
 
 @pytest.mark.django_db
-def test_url_check_list_returns_checks_in_descending_checked_order(api_client):
+def test_url_check_list_returns_latest_check(api_client):
     url = Url.objects.create(url="https://checks.example.com")
-    older = UrlCheck.objects.create(url=url, status_code=200)
-    newer = UrlCheck.objects.create(url=url, status_code=503)
+    _ = UrlPing.objects.create(url=url, status_code=200)
+    newer = UrlPing.objects.create(url=url, status_code=503)
 
-    response = api_client.get(reverse("api:url-check-list"))
+    response = api_client.get(reverse("api:url-ping-list"))
 
     assert response.status_code == 200
     body = response.json()
-    assert [item["id"] for item in body] == [newer.id, older.id]
+    assert [item["id"] for item in body] == [newer.id]
     assert body[0]["url"] == url.id
     assert body[0]["status_code"] == 503
-    assert "checked_at" in body[0]
+    assert "time" in body[0]

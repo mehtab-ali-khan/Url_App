@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-      - develop
-      - "feature/**"
   pull_request:
 
 jobs:
@@ -28,11 +26,8 @@ jobs:
         run: pre-commit run --all-files
 
   test:
+    need: quality
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: backend
 
     steps:
       - name: Check out code
@@ -48,5 +43,5 @@ jobs:
 
       - name: Run pytest
         env:
-          DJANGO_SETTINGS_MODULE: core.test_settings
+          DJANGO_SETTINGS_MODULE: core.settings
         run: pytest

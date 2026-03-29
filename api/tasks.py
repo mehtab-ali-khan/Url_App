@@ -1,7 +1,7 @@
 import requests
 from celery import shared_task
 
-from .models import Url, UrlCheck
+from .models import Url, UrlPing
 
 
 @shared_task
@@ -15,7 +15,7 @@ def check_all_urls():
         except requests.RequestException:
             status_code = None
 
-        UrlCheck.objects.create(
+        UrlPing.objects.create(
             url=url_obj,
             status_code=status_code,
         )
