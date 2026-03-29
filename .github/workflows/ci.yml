@@ -26,7 +26,7 @@ jobs:
         run: pre-commit run --all-files
 
   test:
-    need: quality
+    needs: quality
     runs-on: ubuntu-latest
 
     steps:
