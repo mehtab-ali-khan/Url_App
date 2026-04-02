@@ -1,8 +1,10 @@
-from django.db.models import Max
-from rest_framework import generics
+from django.db.models import OuterRef, Subquery
+from rest_framework import generics, status
+from rest_framework.response import Response
 
 from .models import Url, UrlPing
 from .serializers import UrlPingSerializer, UrlSerializer
+from .utils import get_snapshot_url
 
 
 class UrlListCreateView(generics.ListCreateAPIView):
@@ -14,18 +16,30 @@ class UrlLatestPingListView(generics.ListAPIView):
     serializer_class = UrlPingSerializer
 
     def get_queryset(self):
+        latest = (
+            UrlPing.objects.filter(url=OuterRef("url"))
+            .order_by("-time")
+            .values("time")[:1]
+        )
 
-        latest_pings = UrlPing.objects.values("url").annotate(  # group by url
-            latest=Max("time")
-        )  # get latest time per url
+        return (
+            UrlPing.objects.filter(time=Subquery(latest))
+            .select_related("url")
+            .order_by("url_id")
+        )
 
-        # fetch actual ping objects matching latest times
-        result = []
-        for entry in latest_pings:
-            ping = UrlPing.objects.filter(
-                url=entry["url"], time=entry["latest"]
-            ).first()
-            if ping:
-                result.append(ping)
 
-        return result
+class PingSnapshotView(generics.RetrieveAPIView):
+    queryset = UrlPing.objects.all()
+    lookup_field = "pk"
+
+    def retrieve(self, request, *args, **kwargs):
+        ping = self.get_object()
+
+        if not ping.error_snapshot:
+            return Response(
+                {"error": "No snapshot for this ping"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        url = get_snapshot_url(ping.error_snapshot)
+        return Response({"snapshot_url": url})

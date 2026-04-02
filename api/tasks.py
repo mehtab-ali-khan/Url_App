@@ -2,6 +2,7 @@ import requests
 from celery import shared_task
 
 from .models import Url, UrlPing
+from .utils import upload_snapshot
 
 
 @shared_task
@@ -12,12 +13,14 @@ def check_all_urls():
         try:
             response = requests.get(url_obj.url, timeout=10)
             status_code = response.status_code
-        except requests.RequestException:
-            status_code = None
+            error_snapshot = None
 
-        UrlPing.objects.create(
-            url=url_obj,
-            status_code=status_code,
-        )
+            if not (200 <= status_code < 300):
+                error_snapshot = upload_snapshot(response.text, url_obj.url)
 
-    return f"Checked {urls.count()} urls"
+            UrlPing.objects.create(
+                url=url_obj, status_code=status_code, error_snapshot=error_snapshot
+            )
+
+        except Exception:
+            UrlPing.objects.create(url=url_obj, status_code=0, error_snapshot=None)
