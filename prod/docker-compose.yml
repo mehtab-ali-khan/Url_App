@@ -15,9 +15,10 @@ services:
 
   backend:
     build: ..
+    image: server-monitor:latest
     env_file: ../.env
     restart: unless-stopped
-    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+    command: sh -c "python manage.py collectstatic --noinput && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3"
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
@@ -26,7 +27,7 @@ services:
       - redis
 
   celery_worker:
-    build: ..
+    image: server-monitor:latest
     env_file: ../.env
     restart: unless-stopped
     command: celery -A core worker --loglevel=info
@@ -35,7 +36,7 @@ services:
       - redis
 
   celery_beat:
-    build: ..
+    image: server-monitor:latest
     env_file: ../.env
     restart: unless-stopped
     command: celery -A core beat --loglevel=info
