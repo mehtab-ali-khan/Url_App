@@ -29,3 +29,4 @@ jobs:
             docker compose -f prod/docker-compose.yml up -d --build
             docker compose -f prod/docker-compose.yml restart nginx
             docker compose -f prod/docker-compose.yml ps
+            docker image prune -f
