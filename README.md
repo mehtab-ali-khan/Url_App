@@ -267,4 +267,3 @@ The `prod/docker-compose.yml` setup adds:
 - `gunicorn` for the Django app
 - `nginx` as a reverse proxy
 - persistent Docker volumes for Postgres and static/media files
-
